@@ -4,6 +4,7 @@
 #include <array>
 #include <stdexcept>
 #include <algorithm>
+#include <cmath>
 
 OutcomeProbabilities calculateProbabilities21Plus3(const Shoe& shoe) {
     OutcomeProbabilities probabilities;
@@ -15,12 +16,12 @@ OutcomeProbabilities calculateProbabilities21Plus3(const Shoe& shoe) {
             "Shoe must contain at least three cards."
         );
     }
-
+    //N choose 3
     double totalCombinations = static_cast<double>(N) * (N - 1) * (N - 2) / 6.0;
 
     // Counts of physical combinations by outcome
     std::array<double, 6> counts{};
-
+    //go through every possible selection of three cards
     for (int i = 0; i < 52; ++i) {
         for (int j = i; j < 52; ++j) {
             for (int k = j; k < 52; ++k) {
@@ -30,7 +31,7 @@ OutcomeProbabilities calculateProbabilities21Plus3(const Shoe& shoe) {
                 int c = shoe.getCardCount(k);
 
                 double weight = 0.0;
-
+                //calculate the number of combinations for this card selection
                 if (i == j && j == k) {
                     weight = a * (a - 1.0) * (a - 2.0) / 6.0;
                 }
@@ -46,13 +47,13 @@ OutcomeProbabilities calculateProbabilities21Plus3(const Shoe& shoe) {
 
                 if (weight <= 0.0)
                     continue;
-
+                //classify the hand and add its weight(number of combinations) to the corresponding count
                 HandType type = classifyHand(i, j, k);
                 counts[static_cast<int>(type)] += weight;
             }
         }
     }
-
+    //convert the combination counts to probabilities
     probabilities.loss = counts[0] / totalCombinations;
     probabilities.flush = counts[1] / totalCombinations;
     probabilities.straight = counts[2] / totalCombinations;
@@ -102,15 +103,79 @@ HandType classifyHand(int a, int b, int c) {
 
     return HandType::Loss;
 }
+PayoutStructure21Plus3::PayoutStructure21Plus3(
+    double flush,
+    double straight,
+    double threeOfAKind,
+    double straightFlush,
+    double suitedTrips
+) {
+    setPayouts(
+        flush,
+        straight,
+        threeOfAKind,
+        straightFlush,
+        suitedTrips
+    );
+}
 
-double calculateEV21Plus3(const Shoe& shoe){
-    OutcomeProbabilities probabilities = calculateProbabilities21Plus3(shoe);
+void PayoutStructure21Plus3::setPayouts(
+    double flush,
+    double straight,
+    double threeOfAKind,
+    double straightFlush,
+    double suitedTrips
+) {
+    if (!std::isfinite(flush) || flush < 0 ||
+        !std::isfinite(straight) || straight < 0 ||
+        !std::isfinite(threeOfAKind) || threeOfAKind < 0 ||
+        !std::isfinite(straightFlush) || straightFlush < 0 ||
+        !std::isfinite(suitedTrips) || suitedTrips < 0) {
 
-    return probabilities.flush * 9 +
-           probabilities.straight * 9 +
-           probabilities.threeOfAKind * 9 +
-           probabilities.straightFlush * 9 +
-           probabilities.suitedTrips * 9 -
-           probabilities.loss;
+        throw std::invalid_argument(
+            "Payouts must be finite and nonnegative."
+        );
+    }
+
+    flushPayout = flush;
+    straightPayout = straight;
+    threeOfAKindPayout = threeOfAKind;
+    straightFlushPayout = straightFlush;
+    suitedTripsPayout = suitedTrips;
+}
+
+double PayoutStructure21Plus3::getFlushPayout() const {
+    return flushPayout;
+}
+
+double PayoutStructure21Plus3::getStraightPayout() const {
+    return straightPayout;
+}
+
+double PayoutStructure21Plus3::getThreeOfAKindPayout() const {
+    return threeOfAKindPayout;
+}
+
+double PayoutStructure21Plus3::getStraightFlushPayout() const {
+    return straightFlushPayout;
+}
+
+double PayoutStructure21Plus3::getSuitedTripsPayout() const {
+    return suitedTripsPayout;
+}
+
+double calculateEV21Plus3(
+    const Shoe& shoe,
+    const PayoutStructure21Plus3& payouts
+) {
+    OutcomeProbabilities p =
+        calculateProbabilities21Plus3(shoe);
+
+    return p.flush * payouts.getFlushPayout() +
+           p.straight * payouts.getStraightPayout() +
+           p.threeOfAKind * payouts.getThreeOfAKindPayout() +
+           p.straightFlush * payouts.getStraightFlushPayout() +
+           p.suitedTrips * payouts.getSuitedTripsPayout() -
+           p.loss;
 }
     

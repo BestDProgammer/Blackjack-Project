@@ -15,6 +15,8 @@ private:
 
 public:
     Shoe();
+    explicit Shoe(int decks);
+    
 
     bool removeCard(int rank, int suit);
 

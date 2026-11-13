@@ -1,20 +1,37 @@
+#include <iomanip>
 #include <iostream>
 #include "SideBetEV.h"
 #include "shoe.h"
 
-int main()
-{
-    Shoe shoe = Shoe();
-    OutcomeProbabilities probabilities = calculateProbabilities21Plus3(shoe);
-    std::cout << "Loss probability: " << probabilities.loss << std::endl;
-    std::cout << "Flush probability: " << probabilities.flush << std::endl;
-    std::cout << "Straight probability: " << probabilities.straight << std::endl;
-    std::cout << "Three of a Kind probability: " << probabilities.threeOfAKind << std::endl;
-    std::cout << "Straight Flush probability: " << probabilities.straightFlush << std::endl;
-    std::cout << "Suited Trips probability: " << probabilities.suitedTrips << std::endl;
+int main() {
+    Shoe shoe(6);
 
-    double ev = calculateEV21Plus3(shoe);
-    std::cout << "Expected value: " << ev << std::endl;
-    
+    // Default: 9:1 on everything
+    PayoutStructure21Plus3 configuration1;
+
+    // Alternative paytable
+    PayoutStructure21Plus3 configuration2(
+        5, 10, 25, 40, 100
+    );
+
+    std::cout << std::fixed
+              << std::setprecision(6);
+
+    std::cout << "Configuration 1 EV: "
+              << calculateEV21Plus3(shoe, configuration1)
+              << '\n';
+
+    std::cout << "Configuration 2 EV: "
+              << calculateEV21Plus3(shoe, configuration2)
+              << '\n';
+
+    // Modify configuration 2
+    configuration2.setPayouts(5, 10, 20, 30, 20);
+
+    std::cout << "Updated Configuration 2 EV: "
+              << calculateEV21Plus3(shoe, configuration2)
+              << '\n';
+
     return 0;
 }
+

@@ -1,12 +1,19 @@
 #include <array>
 #include <cstdint>
+#include <stdexcept>
 #include "shoe.h"
 
 
-Shoe::Shoe() {
-    cards.fill(6);
-    remaining = 312;
+Shoe::Shoe(int decks) {
+    if (decks < 1) {
+        throw std::invalid_argument(
+            "Number of decks must be at least 1."
+        );
+    }
+    cards.fill(decks);
+    remaining = decks * 52;
 }
+Shoe::Shoe() : Shoe(6) {}
 
 bool Shoe::removeCard(int rank, int suit) {
     if (rank < 0 || rank >= 13 ||
@@ -36,6 +43,7 @@ int Shoe::getRemaining() const {
     return remaining;
 }
 
+//get the number of cards of each rank in the shoe
 std::array<int, 13> Shoe::getRankCounts() const {
     std::array<int, 13> ranks{};
 
