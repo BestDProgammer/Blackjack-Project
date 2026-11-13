@@ -1,0 +1,15 @@
+# Build directories
+build/
+out/
+
+# C++ compiled files
+*.exe
+*.obj
+*.o
+*.ilk
+*.pdb
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
