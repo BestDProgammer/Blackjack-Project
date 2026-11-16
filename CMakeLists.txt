@@ -4,13 +4,31 @@ project(BlackjackProject LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_executable(BlackjackProject
-    src/main.cpp
-    src/Shoe.cpp
-    src/SideBetEV.cpp
-)
+add_library(blackjack_core src/shoe.cpp src/SideBetEV.cpp src/ShoeController.cpp)
+target_include_directories(blackjack_core PUBLIC include)
+add_executable(BlackjackProject src/main.cpp)
+target_link_libraries(BlackjackProject PRIVATE blackjack_core)
 
-target_include_directories(BlackjackProject
-    PRIVATE include
-)
+option(BUILD_GUI "Build the Qt 6 desktop interface when Qt is available" ON)
+if(BUILD_GUI)
+    find_package(Qt6 COMPONENTS Widgets QUIET)
+    if(Qt6_FOUND)
+        add_executable(BlackjackUI app/main.cpp)
+        target_link_libraries(BlackjackUI PRIVATE blackjack_core Qt6::Widgets)
+    else()
+        message(STATUS "Qt 6 Widgets not found. Set CMAKE_PREFIX_PATH to Qt to build BlackjackUI.")
+    endif()
+endif()
+
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(core_tests tests/core_tests.cpp)
+    target_link_libraries(core_tests PRIVATE blackjack_core)
+    add_test(NAME core_tests COMMAND core_tests)
+    if(TARGET BlackjackUI)
+        add_test(NAME ui_smoke COMMAND BlackjackUI --smoke-test)
+        set_tests_properties(ui_smoke PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+    endif()
+endif()

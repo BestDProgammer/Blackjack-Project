@@ -2,7 +2,39 @@
 
 A C++ application for tracking blackjack shoe composition and calculating composition-dependent expected values (EV) for blackjack side bets.
 
-The project currently supports exact 21+3 side-bet probability calculations and configurable payout structures. Future development will include a graphical interface for manually removing cards from the shoe, additional side bets, and computer vision for automatic card recognition.
+The project includes **Felt**, a Qt 6 desktop interface for manually tracking a shoe and exploring exact 21+3 side-bet probabilities and expected value. Additional side bets and computer vision are future work.
+
+## Run the desktop UI
+
+Install Qt 6 with its Widgets module and CMake. On macOS with Homebrew, the minimal Qt package is `brew install qtbase`.
+
+```sh
+cmake -S . -B build -DCMAKE_PREFIX_PATH=/opt/homebrew/opt/qtbase
+cmake --build build
+./build/BlackjackUI
+```
+
+On Windows, install Qt 6 for your compiler using the Qt installer, point `CMAKE_PREFIX_PATH` at that Qt kit (for example `C:/Qt/6.x.x/msvc2022_64`), and run `build/Debug/BlackjackUI.exe` after a Debug build. Qt DLLs must be on your PATH, or deploy them alongside the executable using Qt's `windeployqt` tool.
+
+The setup screen offers 1–16 decks, 21+3 selection, classic/tiered/custom net payouts, and automatic or manual EV updates. Starting a session initializes a fresh shoe. In the tracker:
+
+- Click any of the 52 rank/suit buttons to remove one physical copy. Depleted cards are disabled.
+- Use **Undo last card** (Ctrl+Z / Cmd+Z) to restore the most recently removed card.
+- **Shuffle shoe** immediately resets the current shoe and removal history.
+- In manual mode, shoe counts change immediately and the displayed results are marked **OUTDATED** until **Update EV** is pressed.
+- EV, outcome probabilities, and the session trend use the actual C++ enumeration engine. Below three cards, EV is unavailable.
+- Table settings let you configure a new session; **Start a fresh session** applies them and resets the shoe.
+
+Perfect Pairs is shown as coming later and cannot be selected. The reusable `ShoeController` is the shared entry point for future computer vision input.
+
+Qt is optional for the original CLI and tests. Without it, CMake builds those targets and explains how to enable the UI.
+
+```sh
+ctest --test-dir build --output-on-failure
+QT_QPA_PLATFORM=offscreen ./build/BlackjackUI --smoke-test
+```
+
+The UI smoke test checks card removal, undo, depletion, shuffle, and manual refresh, and writes setup/tracker screenshots to `/tmp/felt-*.png` (macOS/Linux).
 
 ## 1. Prerequisites
 
@@ -135,7 +167,7 @@ To build and run in one command:
 cmake --build build --config Debug; if ($LASTEXITCODE -eq 0) { .\build\Debug\BlackjackProject.exe }
 ```
 
-The application currently runs through the terminal. A graphical user interface is planned but has not yet been implemented.
+This executable runs the original terminal demo. Run `BlackjackUI` for the graphical tracker (see the desktop quick start above).
 
 ## 7. Implemented Features
 
@@ -229,13 +261,13 @@ Additional testing should verify:
 - Different payout configurations.
 - Card-removal boundary conditions.
 
-A dedicated automated test suite is planned.
+Core regression tests cover the fresh-shoe benchmark, probability normalization, chronological undo, depleted cards, configuration validation, and small-shoe boundaries. Run them with `ctest --test-dir build --output-on-failure`.
 
 ## 9. Planned Features
 
-### Manual Shoe Tracking UI
+### Manual Shoe Tracking UI (implemented)
 
-A desktop graphical interface allowing users to:
+The Qt desktop interface allows users to:
 
 - Configure the number of decks.
 - Select supported side bets and payout structures.
@@ -327,4 +359,4 @@ cmake -S . -B build
 
 ---
 
-**Project status:** Core shoe composition tracking and 21+3 expected-value calculations implemented. Graphical interface and computer vision components are in development.
+**Project status:** Core shoe tracking, exact 21+3 EV, and the manual Qt interface are implemented. Computer vision and additional side bets are future work.
